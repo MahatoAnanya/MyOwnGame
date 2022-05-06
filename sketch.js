@@ -1,144 +1,185 @@
-var boy,boyImg;
-var zombies;
-var ground,invisibleGround;
-var groundImage;
+  var PLAY = 1;
+  var END = 0;
+  var gameState =PLAY
 
-var jungle;
+  var girl,girl_running;
+  var butterfly,butterfly_flying
+  var backGround, invisibleGround, backgroundImage;
+   
+  var obstaclesGroup, obstacle1, obstacle2, obstacle3, obstacle4;
+  var butterfliesGroup;
 
-var stoneImg,stone,stoneGroup;
-
-var gameOver, restart;
-
-var PLAY=1;
-var gameState=1;
-var END=0;
-var score;
-//var Text;
-
-function preload(){
-boyImg=loadAnimation("boy1.png","boy2.png","boy3.png","boy4.png","boy5.png","boy6.png","boy7.png","boy8.png")
-
-zombiesImg=loadImage("zombies.png")
-
-jungleImage = loadImage("jungle.png")
-
-
-stoneImg=loadImage("stone.png")
-restartImg=loadImage("restart.png")
-gameOverImg=loadImage("gameOver.png")
-
-
-
-
-
-
-
-}
-
-function setup() {
-createCanvas(600,600) 
-//spookySound.loop();
-stoneGroup=new Group()
-boy=createSprite(200,200,50,50)
-boy.scale=0.4
-boy.addAnimation("boy",boyImg);
-zombies=createSprite(200,200,50,50)
-zombies.scale=0.4
-zombies.addImage("zombies",zombiesImg);
-
-jungle=createSprite(50,180,400,20)
-jungle.scale=1.2
-jungle.addImage("jungle",jungleImage);
-jungle.x=jungle.width /2;
-
-gameOver=createSprite(300,100);
-gameOver.addImage(gameOverImg);
-gameOver.visible=false;
-
-restart=createSprite(300,100);
-restart.addImage(restartImg);
-restart.visible=false;
-
-invisibleGround=createSprite(200,190,400,10)
-invisibleGround.visible=false
-
-
-
-
-
-
-
-
-
-
-
-}
-
-function draw() {
-  background(225)
-   //Text("Score:"+ScreenOrientation,500,50)
+  var score;
+  var gameOverImg,restartImg;
+  var jumpSound,dieSound
   
 
+   
+ function preload(){
+    girl_running=loadImage('girl2.gif') ;
+    butterfly=loadImage("butterfly.gif") 
+  backgroundImage = loadImage("backGround.png");
+
+  obstacle1 = loadImage("obstacle1.jpg");
+  obstacle2 = loadImage("obstacle2.png");
+  obstacle3 = loadImage("obstacle3.png");
+  obstacle4 = loadImage("obstacle4.png");
+
+  restartImg = loadImage("restart.png");
+  gameOverImg = loadImage("gameOver.png")
 
 
-    if(gameState===PLAY){
+  }
 
-      if(keyDown("space")){
-        boy.velocityY=-5
-      }
-      //gameOver.visible=false
-      //restart.visible=false
-      jungle.velocityX-=(4+3*score/100)
-      score = score + Math.round(getFrameRate()/60)
-      if(score%100===0&&score>0){
 
-      }
-      if(jungle.x < 0) {
-        jungle.x=jungle.width/2;
-      }
-      
-      boy.velocityY = boy.velocityY + 0.8
-     // if(zombies.isTouching(stoneGroup)){
-        //zombies.velocityY=-10
-      //}
+ function setup() {
+    createCanvas(800,400);
+  girl = createSprite(400, 200, 50, 50);
+  girl=addAnimation("running",girl_running)
+  girl.scale = 1.5
+  girl.setCollider("circle",0,0,300)
+  girl.debug=true
 
-      
-      if(zombies.isTouching(boy)){
-        gameState=END
-      }
-      else {
-        if(stoneGroup.isTouching(boy)){
-          gameState = END
-      }
-    }  
-if (gameState===END){
+  //butterfly = createSprite(450,300,30,30);
+  //butterfly=addAnimation("butterfly",butterfly)
+  
+
+  backGround = createSprite(x,y,400,400);
+  backGround.addImage("backGround",backGroundImage);
+  backGround.x = backGround.width /2;
+
+  gameOver = createSprite(300,100);
+  gameOver.addImage(gameOverImg);
+
+  restart = createSprite(300,140);
+  restart.addImage(restartImg);
+  
+
+  gameOver.scale = 0.5;
+  restart.scale = 0.5;
+
+  invisibleGround = createSprite(200,190,400,10);
+  invisibleGround.visible = false;
+
+
+  obstaclesGroup = createGroup()
+  butterfliesGroup = createGroup()
+
+  score = 0
+
+
+
+  }
+
+  function draw() {
+  background(255);  
+  
+  text("Score: "+ score, 500,50);
+
+  girl.x=camera.position.x-200
+
+  if(gameState === PLAY){
+    gameOver.visible = false;
+    restart.visible = false;
+
+    backGround.velocityX=-3
+
+    //score = score + Math.round(getFrameRate()/60)
+
+
+  }
+if(keyDown("space") && girl.y >= 100){
+ girl.velocityY = -12;
+  jumpSound.play();
+}
+
+girl.velocityY = girl.velocityY + 0.8
+
+spawnButterflies()
+spawnObstacles()
+
+if(butterfliesGroup.isTouching(girl)){
+  score += 1
+}
+
+if(obstaclesGroup.isTouching(girl)){
+  gameState = END;
+  butterfliesGroup.destroyEach()
+}
+else if (gameState === END){
   gameOver.visible=true
   restart.visible=true
-  jungle.velocityX=0
+
+  girl.changeAnimation("collided",girl_collided);
 
 
+  backGround.velocityX = 0
+
+  obstaclesGroup.setLifetimeEach(-1);
+  butterfliesGroup.setLifetimeEach(-1)
 }
 
- 
-
-
-
-
-
-
-
-drawSprites()
-
+  //girl.velocityY = girl.velocityY + 0.8
+if(mousePressedOver(restart)){
+  reset();
 }
 
-function stoneGroup(){
-  if (World.frameCount % 200 == 0){
-    var stone = createSprite(Math.round(50,width-50),40,10,10);
-    stone.addImage(stoneImg);
-    stone.scale=0.12;
-    stone.velocityY = 3;
-    stone.lifetime = 150;
- 
+  drawSprites();
+
+}
+function reset(){
+  gameState=PLAY
+  obstaclesGroup.destroyEach()
+  girl.changeAnimation("running",girl_running)
+  gameOver.visible=false
+  restart.visible=false
+  score=0
+}
+
+function spawnButterflies(){
+  if (frameCount % 150 === 0) {
+
+    var butterfly = createSprite(camera.position.x+500,330,40,10);
+
+    butterfly.debug=true;
+   butterfly.velocityX = -(6 + 3*score/100)
+   butterfly.scale = 0.6;
+    
+    
+              
+    butterfly.scale = 0.05;
+     
+     butterfly.lifetime = 400;
+    
+     butterfly.setCollider("rectangle",0,0,butterfly.width/2,butterfly.height/2)
+    
+    butterfliesGroup.add(butterfly);
+    
+}
+}
+
+function spawnObstacles(){
+  if(frameCount % 120 === 0) {
+
+    var obstacle = createSprite(camera.position.x+400,330,40,40);
+    obstacle.setCollider("rectangle",0,0,200,200)
+    obstacle.addImage(obstacle1);
+    obstacle.velocityX = -(6 + 3*score/100)
+    obstacle.scale = 0.15;
+              
+    obstacle.debug=true    
+    obstacle.lifetime = 400;
+    
+    obstaclesGroup.add(obstacle);
+    
   }
 }
-}
+
+
+
+
+
+
+
+
+
